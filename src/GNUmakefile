@@ -22,9 +22,22 @@ HAS_PYTHON_CONFIG := $(shell ${PYTHON}-config --ldflags ${PYTHON_EMBED} 2>/dev/n
 
 CPPFLAGS += -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE -I. -I$(VPATH)
 CFLAGS   += -g -Wall -Wextra -O2
-CFLAGS   += $(shell pkg-config --cflags talloc)
 LDFLAGS  += -Wl,-z,noexecstack
+
+ifeq (${STATIC_TALLOC},)
+CFLAGS   += $(shell pkg-config --cflags talloc)
 LDFLAGS  += $(shell pkg-config --libs talloc)
+else
+CFLAGS   += -Italloc/
+OBJECTS  += talloc/talloc.o
+endif
+
+TALLOC_VER = 2.3.3
+TALLOC_URL = https://www.samba.org/ftp/talloc/talloc-${TALLOC_VER}.tar.gz
+
+talloc/talloc.c:
+	mkdir -p talloc/
+	curl ${TALLOC_URL} | tar -C talloc/ --strip-components=1 -zxf -
 
 CARE_LDFLAGS  = $(shell pkg-config --libs libarchive)
 
